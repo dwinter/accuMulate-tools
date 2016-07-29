@@ -1,0 +1,50 @@
+#!/usr/bin/python
+import sys
+from collections import defaultdict
+
+def parse_line(pairs):
+    """Represent bam header key-value pairs as a dictionary
+
+    Note: expects input to be a list header elements with the BAM 'key:value'
+    format (e.g. ["VN:1.4", "GO:none","SO:coordinate"]). 
+    """
+    return( {k:v.strip() for k,v in [element.split(":", 1) for element in pairs]} )
+
+def make_header_dict(fname):
+    """Represent a complete BAM header as a dictoinary
+
+    The returned dictionary contains keys for each unique header-type (i.e.
+    thing that starts with an @ symbol) with each value being a list of
+    dictionaries containing the key-value pairs defined in that header row.
+    """
+    res = defaultdict(list)
+    with open(fname) as handle:
+        for line in handle:
+            elements = line.split("\t")
+            name = elements[0].strip("@")
+            res[name].append(parse_line(elements[1:]))
+    return(res)
+
+def print_usage():
+    print ("""
+    Usage, either of
+        $ parse_rg.py [bam_header.txt]
+        $ samtools view -H [alignment.bam] | parse_rg.py - 
+    """)
+
+def main():
+    """ """
+    try: 
+        fname = sys.argv[1]
+    except:
+        print_usage()
+    if fname == "-":
+        fname = sys.stdin
+    d = make_header_dict(fname)
+    unique_samples = list(set([r["SM"] for r in d["RG"]]))
+    for samp in unique_samples:
+        print( "sample-name={}".format(samp))
+    exit(0)
+
+if __name__ == "__main__":
+    main()
