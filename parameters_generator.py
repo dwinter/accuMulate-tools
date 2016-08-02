@@ -28,21 +28,27 @@ def make_header_dict(fname):
 def print_usage():
     print ("""
     Usage, either of
-        $ parse_rg.py [bam_header.txt]
-        $ samtools view -H [alignment.bam] | parse_rg.py - 
+        $ parse_rg.py [ancestral sample] [bam_header.txt]
+        $ samtools view -H [alignment.bam] | parse_rg.py [ancestral sample] - 
     """)
 
 def main():
     """ """
     try: 
-        fname = sys.argv[1]
-    except:
+        anc = sys.argv[1]
+        fname = sys.argv[2]
+    except IndexError:
         print_usage()
     if fname == "-":
         fname = sys.stdin
     d = make_header_dict(fname)
-    unique_samples = list(set([r["SM"] for r in d["RG"]]))
-    for samp in unique_samples:
+    samples =  [r["SM"] for r in d["RG"]]
+    if anc in samples:        
+        print("ancestor={}".format(anc))
+    else:
+        print("ERROR: Ancestral sample {} not found in header".format(anc))
+        exit(1)
+    for samp in set([s for s in samples if s != anc]):
         print( "sample-name={}".format(samp))
     exit(0)
 
