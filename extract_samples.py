@@ -10,7 +10,7 @@ def parse_line(pairs):
     """
     return( {k:v.strip() for k,v in [element.split(":", 1) for element in pairs]} )
 
-def make_header_dict(fname):
+def make_header_dict(handle):
     """Represent a complete BAM header as a dictoinary
 
     The returned dictionary contains keys for each unique header-type (i.e.
@@ -18,11 +18,10 @@ def make_header_dict(fname):
     dictionaries containing the key-value pairs defined in that header row.
     """
     res = defaultdict(list)
-    with open(fname) as handle:
-        for line in handle:
-            elements = line.split("\t")
-            name = elements[0].strip("@")
-            res[name].append(parse_line(elements[1:]))
+    for line in handle:
+        elements = line.split("\t")
+        name = elements[0].strip("@")
+        res[name].append(parse_line(elements[1:]))
     return(res)
 
 def print_usage():
@@ -40,8 +39,10 @@ def main():
     except IndexError:
         print_usage()
     if fname == "-":
-        fname = sys.stdin
-    d = make_header_dict(fname)
+        fhandle = sys.stdin
+    else:
+        fhandle = open(fname)
+    d = make_header_dict(fhandle)
     samples =  [r["SM"] for r in d["RG"]]
     if anc in samples:        
         print("ancestor={}".format(anc))
